@@ -1,0 +1,20 @@
+#  This source file is part of the Avogadro project
+#  This source code is released under the {{ license }} License, (see "LICENSE").
+#  https://github.com/{{ github_user }}/{{ plugin_name }}/
+
+"""Entry point for the {{ plugin_name }} plugin."""
+
+import argparse
+
+from .run import run
+
+
+def main():
+    parser = argparse.ArgumentParser("{{ plugin_name }}")
+    # Avogadro always passes the feature identifier as the first argument.
+    parser.add_argument("feature")
+    # Every plugin must accept these without crashing, even if it ignores them.
+    parser.add_argument("--lang", nargs="?", default="en")
+    parser.add_argument("--debug", action="store_true")
+    args = parser.parse_args()
+    run(args)

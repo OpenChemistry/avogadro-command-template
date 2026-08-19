@@ -1,0 +1,18 @@
+"""Shared fixtures for the {{ plugin_name }} tests."""
+
+import json
+from pathlib import Path
+
+import pytest
+
+DATA = Path(__file__).parent / "data"
+
+
+@pytest.fixture
+def water():
+    """The input JSON Avogadro would send for a water molecule.
+
+    A fresh copy per test, since the commands edit the CJSON in place.
+    """
+    with (DATA / "water.json").open(encoding="utf-8") as handle:
+        return json.load(handle)

@@ -1,0 +1,32 @@
+#  This source file is part of the Avogadro project
+#  This source code is released under the {{ license }} License, (see "LICENSE").
+#  https://github.com/{{ github_user }}/{{ plugin_name }}/
+
+"""Dispatch a feature identifier to the handler that implements it."""
+
+import json
+import sys
+
+
+def run(args):
+    # Avogadro writes one JSON object to stdin. Which keys it contains depends
+    # on the feature's metadata: "cjson" for input-format = "cjson", "sdf" for
+    # input-format = "sdf", "options" for the user-options dialog values, and
+    # "selectedAtoms" for every menu command.
+    avo_input = json.load(sys.stdin)
+    output = None
+
+    # Handlers are imported inside each branch so that a slow or optional
+    # dependency is only loaded by the command that actually needs it.
+    match args.feature:
+        case "{{ command_identifier }}":
+            from .commands import {{ command_identifier | replace('-', '_') }}
+            output = {{ command_identifier | replace('-', '_') }}(avo_input)
+        # case "second-command":
+        #     from .commands import second_command
+        #     output = second_command(avo_input)
+
+    # Avogadro reads one JSON object from stdout. Printing nothing leaves the
+    # molecule untouched, which is the right response to an unknown feature.
+    if output is not None:
+        print(json.dumps(output))

@@ -1,0 +1,42 @@
+# {{ plugin_name }}
+
+{{ description }}
+
+## Commands
+
+| Menu | Command | What it does |
+| --- | --- | --- |
+| {{ command_menu }}{% if command_submenu %} › {{ command_submenu }}{% endif %} | {{ command_item }} | Translates the molecule, or just the selected atoms, by a vector |
+
+## Development
+
+```bash
+pixi install
+{% if include_tests %}pixi run test
+{% endif %}# Run a command by hand, the same way Avogadro does
+{% if include_tests %}pixi run {{ plugin_name }} {{ command_identifier }} < tests/data/water.json
+{% else %}echo '{"cjson": {...}, "options": {}, "selectedAtoms": []}' | pixi run {{ plugin_name }} {{ command_identifier }}
+{% endif %}```
+
+Avogadro invokes each feature as `pixi run {{ plugin_name }} <identifier>`,
+writes a JSON object to the process's stdin, and reads a JSON object back from
+stdout. See the [plugin API docs](https://two.avogadro.cc/develop/plugins/).
+
+### Adding a command
+
+1. Add a `[[tool.avogadro.menu-commands]]` block to `pyproject.toml` with a new
+   `identifier` and its menu placement.
+2. Add a matching `case` to `src/{{ module_name }}/run.py`.
+3. Write the handler in `src/{{ module_name }}/commands.py`.
+4. If the command needs a dialog, add a `user-options` JSON file under
+   `src/{{ module_name }}/customization/` and point at it from the metadata.
+
+## Installing
+
+In Avogadro: **Extensions → Plugin Manager → Install from directory**, and
+choose this folder.
+
+## Suggestions
+
+Please file suggestions and bugs at
+<https://github.com/{{ github_user }}/{{ plugin_name }}/issues>.

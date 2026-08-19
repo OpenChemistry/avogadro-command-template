@@ -1,0 +1,112 @@
+[project]
+name = "{{ plugin_name }}"
+version = "0.1.0"
+description = "{{ description }}"
+authors = [{name = "{{ author_name }}", email = "{{ author_email }}"}]
+license = "{{ license }}"
+readme = "README.md"
+requires-python = ">={{ python_requires }}"
+{% set pypi = pypi_dependencies.split(',') | map('trim') | select | list -%}
+{% if pypi -%}
+dependencies = [{% for dep in pypi %}"{{ dep }}"{{ ", " if not loop.last }}{% endfor %}]
+{%- else -%}
+dependencies = []
+{%- endif %}
+
+# Avogadro runs a feature of this plugin as:
+#     pixi run {{ plugin_name }} <identifier> [--lang <locale>] [--debug]
+# The entry point name must begin with "avogadro-" for Avogadro to find it, and
+# by convention it is the plugin name itself. An optional second entry point
+# named "{{ plugin_name }}-setup" would be run once after installation.
+[project.scripts]
+{{ plugin_name }} = "{{ module_name }}:main"
+
+[build-system]
+{% if build_backend == "uv_build" -%}
+build-backend = "uv_build"
+requires = ["uv_build>=0.10.2,<0.11.0"]
+{%- else -%}
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ module_name }}"]
+{%- endif %}
+
+# --- Pixi ------------------------------------------------------------------
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = [{% for p in platforms %}"{{ p }}"{{ ", " if not loop.last }}{% endfor %}]
+{% set conda = conda_dependencies.split(',') | map('trim') | select | list %}
+{%- if conda %}
+[tool.pixi.dependencies]
+{% for dep in conda -%}
+{% set parts = dep.split(' ', 1) -%}
+{{ parts[0] }} = "{{ (parts[1] if parts | length > 1 else '*') | trim }}"
+{% endfor %}
+{%- endif %}
+# Installing the plugin itself as an editable dependency is what lets Avogadro
+# invoke the entry point with `pixi run`.
+[tool.pixi.pypi-dependencies]
+{{ module_name }} = { path = ".", editable = true }
+{% if include_tests %}
+[tool.pixi.feature.test.dependencies]
+pytest = "*"
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+
+[tool.pixi.tasks]
+test = { cmd = "pytest", environment = "test" }
+{%- else %}
+[tool.pixi.tasks]
+{%- endif %}
+
+# --- Avogadro --------------------------------------------------------------
+
+[tool.avogadro]
+minimum-avogadro-version = "1.103"
+
+# Each feature is an entry in an array of tables, keyed by feature type. The
+# other supported types are electrostatic-models, energy-models, file-formats
+# and input-generators.
+#
+# Menu placement is a cascade of labels -- menu, submenu, subsubmenu, item --
+# where the intermediate levels are optional. `menu-priorities` holds exactly
+# one fewer integer than the number of labels: entry i is the priority of
+# label i+1 within label i. Higher priorities sort nearer the top of their
+# parent, ties sort alphabetically, and a separator is drawn automatically
+# between each block of 100.
+[[tool.avogadro.menu-commands]]
+identifier = "{{ command_identifier }}"
+input-format = "cjson"
+menu = "{{ command_menu }}"
+{% if command_submenu -%}
+submenu = "{{ command_submenu }}"
+item = "{{ command_item }}"
+menu-priorities = [ 900, 500 ]
+{%- else -%}
+item = "{{ command_item }}"
+menu-priorities = [ 500 ]
+{%- endif %}
+user-options = "src/{{ module_name }}/customization/{{ command_identifier }}_options.json"
+
+# A second command, for reference. Uncomment it, add a matching case to
+# run.py, and it will appear in the menus.
+#
+# Any label may be replaced by a table of localized strings, which must
+# include a "default" key used as the fallback:
+#
+#     item = { default = "Do Something", de = "Etwas tun" }
+#
+# [[tool.avogadro.menu-commands]]
+# identifier = "second-command"
+# input-format = "sdf"      # Avogadro converts and passes the molecule as SDF
+# input-cjson = true        # ...and additionally passes the full CJSON
+# menu = "Extensions"
+# submenu = "{{ command_submenu or short_name | title }}"
+# item = "Second Command"
+# menu-priorities = [ 900, 400 ]
+# # No user-options key means no dialog: the command runs immediately.

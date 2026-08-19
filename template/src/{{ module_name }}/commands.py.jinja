@@ -1,0 +1,57 @@
+#  This source file is part of the Avogadro project
+#  This source code is released under the {{ license }} License, (see "LICENSE").
+#  https://github.com/{{ github_user }}/{{ plugin_name }}/
+
+"""Menu commands provided by {{ plugin_name }}."""
+
+
+def {{ command_identifier | replace('-', '_') }}(avo_input: dict) -> dict:
+    """Translate the molecule by a user-supplied vector.
+
+    A worked example of the whole round trip: read the CJSON Avogadro sent,
+    read the values the user entered in the dialog, edit the coordinates, and
+    hand the CJSON back.
+    """
+    cjson = avo_input.get("cjson")
+    if cjson is None:
+        return {"error": "No molecule was supplied."}
+
+    # CJSON stores Cartesian coordinates as one flat list of x, y, z triples,
+    # in angstroms.
+    coords = cjson.get("atoms", {}).get("coords", {}).get("3d")
+    if not coords:
+        return {"error": "The molecule has no 3D coordinates."}
+
+    # Keys here match the keys in customization/{{ command_identifier }}_options.json.
+    # Always supply a default: Avogadro omits options the user never touched.
+    options = avo_input.get("options", {})
+    offset = (
+        float(options.get("x", 0.0)),
+        float(options.get("y", 0.0)),
+        float(options.get("z", 0.0)),
+    )
+
+    # Avogadro sends the indices of the selected atoms with every menu command.
+    # An empty selection conventionally means "apply to the whole molecule".
+    selected = avo_input.get("selectedAtoms") or []
+    targets = set(selected) if selected else set(range(len(coords) // 3))
+
+    for atom in targets:
+        for axis in range(3):
+            coords[atom * 3 + axis] += offset[axis]
+
+    # "moleculeFormat" tells Avogadro which key holds the result. It defaults
+    # to "cjson", but state it explicitly so the intent is obvious.
+    return {
+        "moleculeFormat": "cjson",
+        "cjson": cjson,
+        # Translation does not change connectivity, so skip bond perception.
+        "bond": False,
+    }
+
+
+# def second_command(avo_input: dict) -> dict:
+#     """A command that only reports something, leaving the molecule alone."""
+#     count = len(avo_input.get("cjson", {})
+#                 .get("atoms", {}).get("elements", {}).get("number", []))
+#     return {"message": f"This molecule has {count} atoms."}

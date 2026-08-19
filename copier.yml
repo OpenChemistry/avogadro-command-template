@@ -1,0 +1,181 @@
+# Copier template for Avogadro 2 plugins (Pixi project / menu commands).
+#
+#   copier copy /path/to/avogadro-plugin-template my-plugin
+#
+# See https://two.avogadro.cc/develop/plugins/ for the plugin API.
+
+_subdirectory: template
+_min_copier_version: "9.2.0"
+
+# --- Plugin identity -------------------------------------------------------
+
+plugin_name:
+  type: str
+  help: |
+    Plugin name. Avogadro requires this to start with "avogadro-", and to
+    contain only ASCII letters, digits and hyphens (no underscores, no Unicode).
+  default: avogadro-example
+  validator: >-
+    {% if not plugin_name.startswith('avogadro-') %}
+    Plugin names must start with "avogadro-".
+    {% elif not plugin_name.replace('-', '').isalnum() %}
+    Plugin names may only contain ASCII letters, digits and hyphens.
+    {% elif not plugin_name.replace('-', '').isascii() %}
+    Plugin names must be ASCII only.
+    {% elif plugin_name.endswith('-') %}
+    Plugin names must not end with a hyphen.
+    {% endif %}
+
+# The Python package name: hyphens are not legal in Python identifiers.
+module_name:
+  type: str
+  when: false
+  default: "{{ plugin_name | replace('-', '_') }}"
+
+# "avogadro-foo" -> "foo"; used for default menu labels and prose.
+short_name:
+  type: str
+  when: false
+  default: "{{ plugin_name[9:] }}"
+
+description:
+  type: str
+  help: One-line description of the plugin
+  default: "A plugin for Avogadro 2"
+
+author_name:
+  type: str
+  help: Your name
+  default: "Geoff Hutchison"
+
+author_email:
+  type: str
+  help: Your email address
+  default: "geoff.hutchison@gmail.com"
+
+github_user:
+  type: str
+  help: GitHub user or organization that will host the plugin
+  default: "ghutchis"
+
+license:
+  type: str
+  help: License (SPDX identifier)
+  default: BSD-3-Clause
+  choices:
+    - BSD-3-Clause
+    - MIT
+
+year:
+  type: str
+  when: false
+  default: "{{ '%Y' | strftime }}"
+
+# --- Packaging -------------------------------------------------------------
+
+build_backend:
+  type: str
+  help: Build backend for the Python package
+  default: uv_build
+  choices:
+    uv_build (as avogadro-rdkit, avogadro-xyzrender): uv_build
+    hatchling (as avogadro-mace, avo-plugin-demo): hatchling
+
+python_requires:
+  type: str
+  help: Minimum Python version
+  default: "3.11"
+
+platforms:
+  type: str
+  help: Pixi platforms to support
+  multiselect: true
+  default:
+    - osx-arm64
+    - linux-64
+    - win-64
+  choices:
+    - osx-arm64
+    - osx-64
+    - linux-64
+    - linux-aarch64
+    - win-64
+
+conda_dependencies:
+  type: str
+  help: |
+    Conda dependencies, comma separated, with optional version specs
+    (e.g. "numpy >=2.0, openbabel"). Leave blank for none.
+  default: ""
+
+pypi_dependencies:
+  type: str
+  help: |
+    PyPI dependencies, comma separated, with optional version specs
+    (e.g. "rdkit>=2023.3.2"). Leave blank for none.
+  default: ""
+
+# --- The example menu command ----------------------------------------------
+
+command_identifier:
+  type: str
+  help: |
+    Identifier for the example menu command. This is the argument Avogadro
+    passes to your entry point, and the key you dispatch on in run.py.
+  default: translate
+  validator: >-
+    {% if not command_identifier.replace('-', '').replace('_', '').isalnum() %}
+    Identifiers may only contain ASCII letters, digits, hyphens and underscores.
+    {% endif %}
+
+command_menu:
+  type: str
+  help: Top-level menu the command appears under
+  default: Extensions
+  choices:
+    - Extensions
+    - Build
+    - Select
+    - View
+    - File
+    - Analysis
+    - Crystal
+
+command_submenu:
+  type: str
+  help: |
+    Submenu under that menu. Leave blank to put the item directly in the menu.
+  default: "{{ short_name | title }}"
+
+command_item:
+  type: str
+  help: |
+    Menu item label. End it with an ellipsis (…) if the command opens a dialog
+    for user options -- this one does.
+  default: "Translate Molecule…"
+
+include_tests:
+  type: bool
+  help: Include a pytest scaffold?
+  default: true
+
+_message_after_copy: |
+
+  Created {{ plugin_name }} in {{ _copier_conf.dst_path }}.
+
+  Next steps:
+
+    cd {{ _copier_conf.dst_path }}
+    pixi install
+  {%- if include_tests %}
+    pixi run test
+    pixi run {{ plugin_name }} {{ command_identifier }} < tests/data/water.json
+  {%- endif %}
+
+  To try it in Avogadro, use Extensions -> Plugin Manager -> Install from
+  directory and pick that folder.
+
+  Then edit src/{{ module_name }}/commands.py to write your own command. To add
+  a second one, add a [[tool.avogadro.menu-commands]] block to pyproject.toml
+  and a matching case to src/{{ module_name }}/run.py -- both files have a
+  commented-out example in place.

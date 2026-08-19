@@ -1,0 +1,40 @@
+"""Tests for the menu commands in {{ plugin_name }}."""
+
+{% set func = command_identifier | replace('-', '_') -%}
+import pytest
+
+from {{ module_name }}.commands import {{ func }}
+
+
+def coords(result):
+    return result["cjson"]["atoms"]["coords"]["3d"]
+
+
+def test_{{ func }}_shifts_every_atom(water):
+    water["options"] = {"x": 1.0, "y": 2.0, "z": -3.0}
+    result = {{ func }}(water)
+
+    assert result["moleculeFormat"] == "cjson"
+    assert coords(result)[0:3] == pytest.approx([1.0, 2.0, -3.0])
+    assert coords(result)[3:6] == pytest.approx([1.757, 2.586, -3.0])
+
+
+def test_{{ func }}_respects_the_selection(water):
+    water["options"] = {"x": 1.0}
+    water["selectedAtoms"] = [1]
+    result = {{ func }}(water)
+
+    # Only atom 1 moves; the others stay where they were.
+    assert coords(result)[0:3] == pytest.approx([0.0, 0.0, 0.0])
+    assert coords(result)[3:6] == pytest.approx([1.757, 0.586, 0.0])
+
+
+def test_{{ func }}_defaults_to_no_movement(water):
+    before = list(water["cjson"]["atoms"]["coords"]["3d"])
+    result = {{ func }}(water)
+
+    assert coords(result) == pytest.approx(before)
+
+
+def test_{{ func }}_reports_a_missing_molecule():
+    assert "error" in {{ func }}({})
