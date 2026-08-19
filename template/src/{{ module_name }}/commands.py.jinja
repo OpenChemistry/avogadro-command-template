@@ -22,7 +22,8 @@ def {{ command_identifier | replace('-', '_') }}(avo_input: dict) -> dict:
     if not coords:
         return {"error": "The molecule has no 3D coordinates."}
 
-    # Keys here match the keys in customization/{{ command_identifier }}_options.json.
+    # Keys here match the keys in
+    # customization/{{ command_identifier | replace('-', '_') }}_options.json.
     # Always supply a default: Avogadro omits options the user never touched.
     options = avo_input.get("options", {})
     offset = (

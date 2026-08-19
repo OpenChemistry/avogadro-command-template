@@ -51,15 +51,20 @@ platforms = [{% for p in platforms %}"{{ p }}"{{ ", " if not loop.last }}{% endf
 [tool.pixi.pypi-dependencies]
 {{ module_name }} = { path = ".", editable = true }
 {% if include_tests %}
+[tool.pixi.tasks]
+
+# pytest lives in a separate environment so that it is not installed alongside
+# the plugin when Avogadro sets it up for a user. `pixi run test` finds the
+# task there automatically.
 [tool.pixi.feature.test.dependencies]
 pytest = "*"
+
+[tool.pixi.feature.test.tasks]
+test = "pytest"
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
-
-[tool.pixi.tasks]
-test = { cmd = "pytest", environment = "test" }
 {%- else %}
 [tool.pixi.tasks]
 {%- endif %}
@@ -67,7 +72,7 @@ test = { cmd = "pytest", environment = "test" }
 # --- Avogadro --------------------------------------------------------------
 
 [tool.avogadro]
-minimum-avogadro-version = "1.103"
+minimum-avogadro-version = "2.0"
 
 # Each feature is an entry in an array of tables, keyed by feature type. The
 # other supported types are electrostatic-models, energy-models, file-formats
@@ -91,7 +96,7 @@ menu-priorities = [ 900, 500 ]
 item = "{{ command_item }}"
 menu-priorities = [ 500 ]
 {%- endif %}
-user-options = "src/{{ module_name }}/customization/{{ command_identifier }}_options.json"
+user-options = "src/{{ module_name }}/customization/{{ command_identifier | replace('-', '_') }}_options.json"
 
 # A second command, for reference. Uncomment it, add a matching case to
 # run.py, and it will appear in the menus.

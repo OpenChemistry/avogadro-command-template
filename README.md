@@ -2,20 +2,23 @@
 
 A [copier](https://copier.readthedocs.io/) template for Avogadro 2 plugins.
 
-It generates a **Pixi project** plugin (`pypixi`) providing one or more
-**menu commands** — the most common shape by far. Energy models, electrostatic
-models, file formats, and input generators are not covered; see
-[avo-plugin-demo](https://github.com/OpenChemistry/avo-plugin-demo) for
-examples of those.
+It generates a **Pixi project** plugin providing one or more
+**menu commands** — the most common need. Energy models are covered
+by a separate template. If you're interested in electrostatic
+models, file formats, and [input generators](https://github.com/openchemistry/avogenerators) please ask on the [Avogadro forum](https://discuss.avogadro.cc/) for examples.
 
 ## Usage
 
 ```bash
 pixi global install copier     # or: uv tool install copier
-copier copy /path/to/avogadro-plugin-template avogadro-myplugin
+copier copy gh:openchemistry/avogadro-command-template avogadro-myplugin
+# you'll be asked some questions like the name of your plugin and the menu item
 cd avogadro-myplugin
+# edit your code as needed, e.g. src/{{module name}}/*.py
 pixi install
 pixi run test
+# now you can use Install from Directory... in the Manage Plugins dialog
+# to test out 
 ```
 
 To pull in later improvements to this template:
@@ -41,7 +44,7 @@ avogadro-myplugin/
 │   ├── run.py              match/case dispatch on the feature identifier
 │   ├── commands.py         one worked command, plus a commented second
 │   └── customization/
-│       └── translate_options.json
+│       └── translate_options.json     JSON for the dialog if needed
 └── tests/
     ├── conftest.py
     ├── data/water.json     a real Avogadro input JSON
@@ -58,12 +61,16 @@ molecule — with no third-party dependencies, so it runs immediately.
 - The `[project.scripts]` entry point **must** begin with `avogadro-`;
   Avogadro's package manager scans for exactly that prefix.
 - Menu placement uses the flat `menu` / `submenu` / `subsubmenu` / `item` keys
-  with `menu-priorities`. This is what Avogadro 1.103 reads. The nested
-  `path.menu` / `path.item.label` form that appears in `avo-plugin-demo` and in
-  parts of the documentation is not yet implemented.
+  with `menu-priorities`. This is what Avogadro reads. If you just want one
+  menu item under a menu, you can skip `submenu` and `subsubmenu` as needed.
 - `user-options` is a filesystem path relative to the plugin directory, so the
   options JSON can live anywhere; this template keeps it inside the package so
-  it also ships in a built wheel.
+  it's easier to find and tweak.
+
+## More questions?
+
+If you have more questions or want more help getting your plugin started,
+please create a post on the [Avogadro Forum](https://discuss.avogadro.cc/c/development/discussion-and-development-of-plugin-scripts/14).
 
 ## Licenses
 
@@ -73,5 +80,5 @@ For anything else, pick either one, then replace `LICENSE` and change the
 
 ## Reference
 
-- [Writing plugins](https://two.avogadro.cc/develop/plugins/)
-- [Input and output JSON](https://two.avogadro.cc/develop/plugins/io.html)
+- [Writing plugins](https://avogadro.cc/develop/plugins/)
+- [Input and output JSON](https://avogadro.cc/develop/plugins/io.html)
