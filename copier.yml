@@ -115,6 +115,48 @@ pypi_dependencies:
     (e.g. "rdkit>=2023.3.2"). Leave blank for none.
   default: ""
 
+track_dependencies:
+  type: str
+  help: |
+    Dependencies to watch for new releases, comma separated. A GitHub workflow
+    checks PyPI or conda-forge daily, wherever each is declared, and opens a
+    pull request that raises the package's ">=" floor and bumps the plugin
+    version, so Avogadro offers installed copies the update. Each needs a ">=" floor above. Leave blank to
+    turn this off.
+  default: >-
+    {%- set ns = namespace(names=[]) -%}
+    {%- for dep in pypi_dependencies.split(',') | map('trim') | select -%}
+    {%- if '>=' in dep -%}
+    {%- set ns.names = ns.names + [dep.split('>=')[0].split('[')[0] | trim] -%}
+    {%- endif -%}
+    {%- endfor -%}
+    {%- for dep in conda_dependencies.split(',') | map('trim') | select -%}
+    {%- if '>=' in dep and dep.split(' ', 1)[0] != 'python' -%}
+    {%- set ns.names = ns.names + [dep.split(' ', 1)[0]] -%}
+    {%- endif -%}
+    {%- endfor -%}
+    {{ ns.names | join(', ') }}
+  validator: >-
+    {%- set ns = namespace(missing=[]) -%}
+    {%- for name in track_dependencies.split(',') | map('trim') | select -%}
+    {%- set found = namespace(ok=false) -%}
+    {%- for dep in pypi_dependencies.split(',') | map('trim') | select -%}
+    {%- if '>=' in dep and dep.split('>=')[0].split('[')[0] | trim | lower == name | lower -%}
+    {%- set found.ok = true -%}
+    {%- endif -%}
+    {%- endfor -%}
+    {%- for dep in conda_dependencies.split(',') | map('trim') | select -%}
+    {%- if '>=' in dep and dep.split(' ', 1)[0] | lower == name | lower -%}
+    {%- set found.ok = true -%}
+    {%- endif -%}
+    {%- endfor -%}
+    {%- if name | lower == 'python' -%}{%- set found.ok = false -%}{%- endif -%}
+    {%- if not found.ok -%}{%- set ns.missing = ns.missing + [name] -%}{%- endif -%}
+    {%- endfor -%}
+    {%- if ns.missing -%}
+    Not a PyPI or conda dependency with a ">=" floor: {{ ns.missing | join(', ') }}
+    {%- endif -%}
+
 # --- The example menu command ----------------------------------------------
 
 command_identifier:
