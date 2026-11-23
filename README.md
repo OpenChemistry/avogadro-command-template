@@ -1,4 +1,4 @@
-# avogadro-plugin-template
+# avogadro-command-template
 
 A [copier](https://copier.readthedocs.io/) template for Avogadro 2 plugins.
 
