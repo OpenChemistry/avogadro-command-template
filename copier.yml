@@ -121,8 +121,8 @@ track_dependencies:
     Dependencies to watch for new releases, comma separated. A GitHub workflow
     checks PyPI or conda-forge daily, wherever each is declared, and opens a
     pull request that raises the package's ">=" floor and bumps the plugin
-    version, so Avogadro offers installed copies the update. Each needs a ">=" floor above. Leave blank to
-    turn this off.
+    version, so Avogadro offers installed copies the update. Each needs a ">="
+    floor above. Leave blank to turn this off.
   default: >-
     {%- set ns = namespace(names=[]) -%}
     {%- for dep in pypi_dependencies.split(',') | map('trim') | select -%}
